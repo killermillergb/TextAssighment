@@ -1,0 +1,11 @@
+<document docid=44>
+RUNCIBLE-Algebraic Translation on a Limited Computer
+Knuth, D. E.
+CACM November, 1959
+</document>
+
+<document docid=45>
+Flow Outlining-A Substitute for Flow Charting
+Gant, W. T.
+CACM November, 1959
+</document>
