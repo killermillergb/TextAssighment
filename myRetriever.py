@@ -34,7 +34,7 @@ class Retrieve:
         docrank =  self.sortDic(scoreOfDoc)
         
         
-        
+        print self.termWeighting
         
        
         return docrank
@@ -108,8 +108,12 @@ class Retrieve:
         
     def sortDic(self, dic):
         sortedx =  sorted(dic.items(), key=itemgetter(1), reverse=True)[:10]
+        sortedToArray = []
+        for docs in sortedx:
+            sortedToArray.append(docs[0])
+            
       
-        return sortedx
+        return sortedToArray
     def getCollectionSize(self):
         maxID = 0
         for word in self.index:
@@ -147,8 +151,10 @@ class Retrieve:
         normDoc = 0
         for word in query:
             if word in qDocs[currentDoc]:
-                wordTfIdf = qDocs[currentDoc][word] * idfWord[word]
+                wordTfIdf = qDocs[currentDoc][word] * idfWord[word] 
                 normDoc += math.pow(wordTfIdf,2)
-                termFreqIDF += wordTfIdf
+                queryScore = query[word]*idfWord[word]                
+                
+                termFreqIDF += wordTfIdf * queryScore
       
         return (termFreqIDF, math.sqrt(normDoc))
