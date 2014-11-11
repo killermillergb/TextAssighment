@@ -11,13 +11,32 @@ class Retrieve:
         #find docs that are relvent for search
         #reduces wasted search time
         docList = self.findDocs(query)
-          
+        #print docList
         
-        
+        collectionSize = self.getCollectionSize()
         qDocs = self.findTermsDoc(query, docList)
-        self.inverseDocumentFrequency(docList, qDocs, query)
-        docrank =  self.sortDic(qDocs)
+        iDF =self.inverseDocumentFrequency(docList, query, collectionSize)
+        #print qDocs
+
+
+
+        scoreOfDoc = {}
+        normQ =self.normalizeQuery(query,iDF)
+   
+        for doc in qDocs:
+             #print doc
+             (termFreqIDF, normDoc)= self.termFreqIDF(doc, query, iDF, qDocs)
+             if normQ == 0 or normDoc == 0:
+                  scoreOfDoc[doc] = 0
+             else:
+                  scoreOfDoc[doc] =  termFreqIDF/(normQ * normDoc)
+       
+        docrank =  self.sortDic(scoreOfDoc)
         
+        
+        
+        
+       
         return docrank
 
 
@@ -43,79 +62,65 @@ class Retrieve:
                         print "error DocID was never added"
          
         return qDocs 
-    def inverseDocumentFrequency(self, docList, qDocs, query):
-        sizeOfCollection = len(docList)
+    def inverseDocumentFrequency(self, docList, query, sizeOfCollection):
+       
         
         documentFreq = {}
-        collectionFreq = {}
+        #collectionFreq = {}
         idfWord = {}
         tfIdfWord= {}
         #add words to dic
         for word in query:
             documentFreq[word]=0
-            collectionFreq[word]=0
+        #   collectionFreq[word]=0
             idfWord[word]=0
             tfIdfWord[word]=0
-            
-        #idf on docs inspectign, does not give rigth results so going
-        #to do a idf on the whole collection.
-#        for word in query:       
-#           
-#            for docID in docList:
-#                if word in qDocs.get(docID,1):
-#                    collectionFreq[word] +=  qDocs[docID][word]
-#                    documentFreq[word] += 1 
-            
+                        
         for word in query:
              if word in self.index:
                  wordDocIDs = self.index.get(word,1)
                  
                  documentFreq[word] = len(wordDocIDs)
-                 for wordDocID in wordDocIDs:
-                     collectionFreq[word] += wordDocIDs[wordDocID]
+        #         for wordDocID in wordDocIDs:
+        #             collectionFreq[word] += wordDocIDs[wordDocID]
         for word in query:
             if documentFreq[word] == 0:
                 idfWord[word] = 0
             else:
                 idfWord[word] = math.log10(sizeOfCollection/documentFreq[word])
         
-        ######
+
+                
         
-        #put this in a new function since this is to find what it is for the
-        #current document
-        #finding the term Frequency * idf
+        return idfWord
+    def normalizeQuery(self, query, idfWord):
+        queryN = 0
         for word in query:
-            for doc in qDocs:
-                currentDoc = qDocs[doc]
-                if word in currentDoc:
-                    tfIdfWord[word] = currentDoc[word] * idfWord[word]
-                else:
-                    tfIdfWord[word] = 0
-        print tfIdfWord
-#########                    
-        
- 
- 
-                   
-                    
-                        
+            q = (query[word] * idfWord[word])
+            queryN += math.pow(q,2)
             
             
+            
+        return math.sqrt(queryN)
+
+
         
-        
-        
-        
-        
-        return 0
         
     def sortDic(self, dic):
-        sortedx =  sorted(dic.items(), key=itemgetter(0), reverse=True)[:10]
+        sortedx =  sorted(dic.items(), key=itemgetter(1), reverse=True)[:10]
       
         return sortedx
-        
-
+    def getCollectionSize(self):
+        maxID = 0
+        for word in self.index:
+             newID = max(self.index.get(word,1), key = self.index.get(word,1).get)
+             if newID > maxID:
+                 maxID = newID
+            
       
-       
+        return maxID
+
+
        
 
        
@@ -136,4 +141,14 @@ class Retrieve:
                        
          
         return sorted(docs)
-        
+            
+    def termFreqIDF(self,currentDoc, query, idfWord, qDocs):
+        termFreqIDF = 0
+        normDoc = 0
+        for word in query:
+            if word in qDocs[currentDoc]:
+                wordTfIdf = qDocs[currentDoc][word] * idfWord[word]
+                normDoc += math.pow(wordTfIdf,2)
+                termFreqIDF += wordTfIdf
+      
+        return (termFreqIDF, math.sqrt(normDoc))

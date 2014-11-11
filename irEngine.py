@@ -112,6 +112,7 @@ class ResultStore:
         for (qid,docids) in self.results:
             for docid in docids:
                 print >> self.outstream, qid, docid
+            #    print queries.getQuery(qid)
 
     
 if __name__ == '__main__':
@@ -124,9 +125,9 @@ if __name__ == '__main__':
     allResults = ResultStore(config.outstream)
     qid = queries.qids()[0]
 
-    #for qid in queries.qids():
-    query = queries.getQuery(qid)
-    results = retrieve.forQuery(query)
-    allResults.store(qid,results)
-    
+    for qid in queries.qids():
+        query = queries.getQuery(qid)
+        results = retrieve.forQuery(query)
+        allResults.store(qid,results)
+        
     allResults.output()
