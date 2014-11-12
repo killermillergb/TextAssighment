@@ -124,7 +124,7 @@ if __name__ == '__main__':
     queries = Queries(config.queriesFile)
     allResults = ResultStore(config.outstream)
 
-
+    
     for qid in queries.qids():
         query = queries.getQuery(qid)
         results = retrieve.forQuery(query)

@@ -21,16 +21,22 @@ class Binary:
         return self.qDocs
 
 class TF:
-    def __init__(self, currentDoc, query, qDocs):
-
-        self.tf = {}
+    def __init__(self, index, qDocs, query):
+        self.qDocs = {}        
+        for docIDs in qDocs:
+            self.qDocs[docIDs]=0
+            
         for word in query:
-            self.tf[currentDoc] = {}
-            if word in qDocs[currentDoc]:
-                self.tf = qDocs[currentDoc][word] * query[word] 
+            #if the word is not in index catch error
+            if word in index:
+                wordDocIDs = index.get(word,1)
+            
+                for wordDocID in wordDocIDs:
+
+                        self.qDocs[wordDocID] +=  index[word][wordDocID]
                 
     def getTF(self):
-        return (self.tf)
+        return (self.qDocs)
 
 class TFIDF:
     #init class aswell working the IDF for the words relvant to query
@@ -101,9 +107,9 @@ class Retrieve:
             return self.sortDic(binary.getBinary())
             
         elif(self.termWeighting == 'tf'):
-            for doc in qDocs:
-                tf = TF(doc, query, qDocs)
-                scoreOfDoc[doc] = tf.getTF()
+           
+                tf = TF(self.index, qDocs, query)
+                return self.sortDic(tf.getTF())
               
                 
         elif(self.termWeighting == 'tfidf'):
@@ -167,12 +173,13 @@ class Retrieve:
         return maxID
 ##Sorts Dic based on score and returns top 10        
     def sortDic(self, dic):
+       
         sortedx =  sorted(dic.items(), key=itemgetter(1), reverse=True)[:10]
         sortedToArray = []
         for docs in sortedx:
             sortedToArray.append(docs[0])
             
-      
+        print sortedToArray
         return sortedToArray
 
 
