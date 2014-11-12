@@ -123,7 +123,7 @@ if __name__ == '__main__':
     retrieve = myRetriever.Retrieve(index,config.termWeighting)
     queries = Queries(config.queriesFile)
     allResults = ResultStore(config.outstream)
-    qid = queries.qids()[0]
+
 
     for qid in queries.qids():
         query = queries.getQuery(qid)

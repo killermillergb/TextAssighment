@@ -22,9 +22,10 @@ class Binary:
 
 class TF:
     def __init__(self, currentDoc, query, qDocs):
+
         self.tf = {}
         for word in query:
-            self.tf[currentDoc]
+            self.tf[currentDoc] = {}
             if word in qDocs[currentDoc]:
                 self.tf = qDocs[currentDoc][word] * query[word] 
                 
@@ -33,54 +34,46 @@ class TF:
 
 class TFIDF:
     #init class aswell working the IDF for the words relvant to query
-    def __init__(self, docList, query, sizeOfCollection, index):
-       
-        self.query = query
-        
-        documentFreq = {}
-        #collectionFreq = {}
+    def __init__(self, sizeOfCollection, query, index, docList):
         self.idfWord = {}
-        tfIdfWord= {}
-        #add words to dic
-        for word in self.query:
-            documentFreq[word]=0
-        #   collectionFreq[word]=0
-            self.idfWord[word]=0
-            tfIdfWord[word]=0
-                        
-        for word in self.query:
-             if word in index:
-                 wordIDs = index.get(word,1)
-                 
-                 documentFreq[word] = len(wordIDs)
-        #         for wordDocID in wordDocIDs:
-        #             collectionFreq[word] += wordDocIDs[wordDocID]
-        for word in self.query:
-            if documentFreq[word] == 0:
-                self.idfWord[word] = 0
-            else:
-                self.idfWord[word] = math.log10(float(sizeOfCollection)/float(documentFreq[word]))
+        self.query = query
+        self.docList = docList
+        self.index = index
+        for word in index:
+                 documentFreq = len(index.get(word,1))
+                 self.idfWord[word] = math.log10(float(sizeOfCollection)/float(documentFreq))
+        self.normalized = self.normalizeDoc()
+               
     #Works out the tfIDF as well as the norm to reduce relooping    
     def termFreqIDF(self,currentDoc, qDocs):
         termFreqIDF = 0
-        normDoc = 0
+        
+        
         for word in self.query:
             if word in qDocs[currentDoc]:
                 wordTfIdf = qDocs[currentDoc][word] * self.idfWord[word] 
-                
-                normDoc += math.pow(wordTfIdf,2)
+                ##move this out
                 queryScore = self.query[word]*self.idfWord[word]                
                 
-                termFreqIDF += wordTfIdf * queryScore
+                termFreqIDF += (wordTfIdf * queryScore)/self.normalized[currentDoc]
       
-        return (termFreqIDF, math.sqrt(normDoc))
-    def normalizeDoc(self, index, docList):
-        normDoc = {}
-        for docID in docList:
-            noramDoc[docID] = 0
-            for i in index:
-                if docID in i:
-                    noramDoc[docID] += index[word][docID]
+        return termFreqIDF
+        
+    def normalizeDoc(self):
+        self.normDoc = {}
+        for docID in self.docList:
+            self.normDoc[docID] = 0
+            for i in self.index:
+           
+                if docID in self.index[i]:
+                
+                   
+                    self.normDoc[docID] += (self.index[i][docID]*self.idfWord[i])**2
+                  
+      
+        for doc in self.normDoc:
+            self.normDoc[doc] =math.sqrt(self.normDoc[doc])
+        return self.normDoc
             
         
     def getIDF(self):
@@ -111,16 +104,16 @@ class Retrieve:
             for doc in qDocs:
                 tf = TF(doc, query, qDocs)
                 scoreOfDoc[doc] = tf.getTF()
-                
+              
                 
         elif(self.termWeighting == 'tfidf'):
-           
-            tfidf =TFIDF(docList, query, collectionSize, self.index )
+         
+            tfidf =TFIDF(collectionSize, query,self.index, docList )
+      
             for doc in qDocs:
-                tf = TF(doc, query, qDocs)
-                (termFreqIDF, normDoc)= tfidf.termFreqIDF(doc, qDocs)
-               
-                scoreOfDoc[doc] =  float(termFreqIDF)/float(normDoc)
+                #tf = TF(doc, query, qDocs, docList)
+                scoreOfDoc[doc] = tfidf.termFreqIDF(doc, qDocs)
+
                 
         docrank =  self.sortDic(scoreOfDoc)
         
@@ -141,8 +134,27 @@ class Retrieve:
                     if docid not in docs:
                         docs.append(docid)
                        
-        print  sorted(docs)
+      
         return sorted(docs)
+        
+##indexes by docID to make easier access for searching by docID
+##Could keep it as word index but i perfer it my way
+    def findTermsDoc(self,query , docList):
+        qDocs = {}        
+        for docIDs in docList:
+            qDocs[docIDs]={}
+            
+        for word in query:
+            #if the word is not in index catch error
+            if word in self.index:
+                wordDocIDs = self.index.get(word,1)
+            
+                for wordDocID in wordDocIDs:
+
+                        qDocs[wordDocID][word] = wordDocIDs[wordDocID]
+                
+         
+        return qDocs 
 ##returns size of Collection    
     def getCollectionSize(self):
         maxID = 0
@@ -163,24 +175,7 @@ class Retrieve:
       
         return sortedToArray
 
-##indexes by docID to make easier access for searching by docID
-##Could keep it as word index but i perfer it my way
-    def findTermsDoc(self,query , docList):
-        qDocs = {}        
-        for docIDs in docList:
-            qDocs[docIDs]={}
-            
-        for word in query:
-            #if the word is not in index catch error
-            if word in self.index:
-                wordDocIDs = self.index.get(word,1)
-            
-                for wordDocID in wordDocIDs:
 
-                        qDocs[wordDocID][word] = wordDocIDs[wordDocID]
-                
-         
-        return qDocs 
 
         
         
