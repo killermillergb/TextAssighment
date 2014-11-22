@@ -3,40 +3,25 @@ from operator import itemgetter
 
 import math
 ##Starts 2 classes down, wanted to keep my core class on top
+
 class Binary:
-    def __init__(self, index, docList, query):
-        self.qDocs = {}        
-        for docIDs in docList:
-            self.qDocs[docIDs]=0
+    def __init__(self,qDoc):
+        self.bDoc = []
+        for docID in qDoc:
+            self.bDoc.append(docID)
+    def getResults(self):
+        return self.bDoc[:10]
             
-        for word in query:
-            #if the word is not in index catch error
-            if word in index:
-                wordDocIDs = index.get(word,1)
-            
-                for wordDocID in wordDocIDs:
-
-                        self.qDocs[wordDocID] += 1
-    def getBinary(self):
-        return self.qDocs
-
+    
 class TF:
     def __init__(self, index, qDocs, query):
-        self.qDocs = {}        
-        for docIDs in qDocs:
-            self.qDocs[docIDs]=0
-            
-        for word in query:
-            #if the word is not in index catch error
-            if word in index:
-                wordDocIDs = index.get(word,1)
-            
-                for wordDocID in wordDocIDs:
+        self.tf= {}
 
-                        self.qDocs[wordDocID] +=  index[word][wordDocID]
+        for docID in qDocs:
+             self.tf[docID] = sum(qDocs[docID].itervalues())
                 
     def getTF(self):
-        return (self.qDocs)
+        return self.tf
 
 class TFIDF:
     #init class aswell working the IDF for the words relvant to query
@@ -92,16 +77,14 @@ class Retrieve:
       
         #gets a lits of all IDs of docs which are relvant to the query      
         (docList, qDocs) = self.findDocs(query)
-        #gets the size of the Collection
-        collectionSize = self.getCollectionSize()
+        
+        
         #gets a index by DocID for easier seach
        # qDocs = self.findTermsDoc(query, docList)
         scoreOfDoc = {}
-        
-        
         if(self.termWeighting == 'binary'):
-            binary = Binary(self.index, docList, query)
-            return self.sortDic(binary.getBinary())
+            binary = Binary(qDocs)
+            return binary.getResults()
             
         elif(self.termWeighting == 'tf'):
            
@@ -110,7 +93,9 @@ class Retrieve:
               
                 
         elif(self.termWeighting == 'tfidf'):
-         
+            #gets the size of the Collection
+            collectionSize = self.getCollectionSize()
+
             tfidf =TFIDF(collectionSize, query,self.index)
       
             for doc in qDocs:
