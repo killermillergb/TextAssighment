@@ -42,13 +42,27 @@ class TFIDF:
     #init class aswell working the IDF for the words relvant to query
     def __init__(self, sizeOfCollection, query, index, docList):
         self.idfWord = {}
+        self.normalized = {}
         self.query = query
         self.docList = docList
         self.index = index
+      
         for word in index:
-                 documentFreq = len(index.get(word,1))
-                 self.idfWord[word] = math.log10(float(sizeOfCollection)/float(documentFreq))
-        self.normalized = self.normalizeDoc()
+            
+             documentFreq = len(index.get(word,1))
+             self.idfWord[word] = math.log10(float(sizeOfCollection)/float(documentFreq))
+             for docID in self.index[word]:
+               #  if word in qDocs[currentDoc]:
+                 
+                 if docID in  self.normalized:
+                     self.normalized[docID] += (self.index[word][docID]*self.idfWord[word])**2
+                 else:
+                     self.normalized[docID] = (self.index[word][docID]*self.idfWord[word])**2
+        for doc in self.normalized:
+             self.normalized[doc] =math.sqrt(self.normalized[doc])
+                     
+               
+               
                
     #Works out the tfIDF as well as the norm to reduce relooping    
     def termFreqIDF(self,currentDoc, qDocs):
@@ -64,23 +78,23 @@ class TFIDF:
                 termFreqIDF += (wordTfIdf * queryScore)/self.normalized[currentDoc]
       
         return termFreqIDF
-        
-    def normalizeDoc(self):
-        self.normDoc = {}
-        for docID in self.docList:
-            self.normDoc[docID] = 0
-            for i in self.index:
-           
-                if docID in self.index[i]:
-                
-                   
-                    self.normDoc[docID] += (self.index[i][docID]*self.idfWord[i])**2
-                  
-      
-        for doc in self.normDoc:
-            self.normDoc[doc] =math.sqrt(self.normDoc[doc])
-        return self.normDoc
-            
+#        
+#    def normalizeDoc(self):
+#        self.normDoc = {}
+#        for docID in self.docList:
+#            self.normDoc[docID] = 0
+#            for i in self.index:
+#           
+#                if docID in self.index[i]:
+#                
+#                   
+#                    self.normDoc[docID] += (self.index[i][docID]*self.idfWord[i])**2
+#                  
+#      
+#        for doc in self.normDoc:
+#            self.normDoc[doc] =math.sqrt(self.normDoc[doc])
+#        return self.normDoc
+#            
         
     def getIDF(self):
         return self.idfWord
@@ -179,7 +193,7 @@ class Retrieve:
         for docs in sortedx:
             sortedToArray.append(docs[0])
             
-        print sortedToArray
+       
         return sortedToArray
 
 
