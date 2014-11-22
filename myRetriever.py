@@ -40,11 +40,11 @@ class TF:
 
 class TFIDF:
     #init class aswell working the IDF for the words relvant to query
-    def __init__(self, sizeOfCollection, query, index, docList):
+    def __init__(self, sizeOfCollection, query, index):
         self.idfWord = {}
         self.normalized = {}
         self.query = query
-        self.docList = docList
+ 
         self.index = index
       
         for word in index:
@@ -78,24 +78,7 @@ class TFIDF:
                 termFreqIDF += (wordTfIdf * queryScore)/self.normalized[currentDoc]
       
         return termFreqIDF
-#        
-#    def normalizeDoc(self):
-#        self.normDoc = {}
-#        for docID in self.docList:
-#            self.normDoc[docID] = 0
-#            for i in self.index:
-#           
-#                if docID in self.index[i]:
-#                
-#                   
-#                    self.normDoc[docID] += (self.index[i][docID]*self.idfWord[i])**2
-#                  
-#      
-#        for doc in self.normDoc:
-#            self.normDoc[doc] =math.sqrt(self.normDoc[doc])
-#        return self.normDoc
-#            
-        
+  
     def getIDF(self):
         return self.idfWord
         
@@ -108,11 +91,11 @@ class Retrieve:
     def forQuery(self,query):
       
         #gets a lits of all IDs of docs which are relvant to the query      
-        docList = self.findDocs(query)
+        (docList, qDocs) = self.findDocs(query)
         #gets the size of the Collection
         collectionSize = self.getCollectionSize()
         #gets a index by DocID for easier seach
-        qDocs = self.findTermsDoc(query, docList)
+       # qDocs = self.findTermsDoc(query, docList)
         scoreOfDoc = {}
         
         
@@ -128,7 +111,7 @@ class Retrieve:
                 
         elif(self.termWeighting == 'tfidf'):
          
-            tfidf =TFIDF(collectionSize, query,self.index, docList )
+            tfidf =TFIDF(collectionSize, query,self.index)
       
             for doc in qDocs:
                 #tf = TF(doc, query, qDocs, docList)
@@ -140,41 +123,27 @@ class Retrieve:
         return docrank
 ##pulls out all relvant docs for the query to reduce search time.
     def findDocs(self,query):
-        docs = []  
+        docs = []
+        qDocs = {}       
           
         for word in query:
            # print word
             #print self.index.get(word,1)
             if word in self.index:
-                docwd = self.index.get(word,1)
-           
-            
-                for docid in docwd:
-                   
+                for docid in self.index[word]:
                     if docid not in docs:
                         docs.append(docid)
-                       
-      
-        return sorted(docs)
-        
-##indexes by docID to make easier access for searching by docID
-##Could keep it as word index but i perfer it my way
-    def findTermsDoc(self,query , docList):
-        qDocs = {}        
-        for docIDs in docList:
-            qDocs[docIDs]={}
-            
-        for word in query:
-            #if the word is not in index catch error
-            if word in self.index:
-                wordDocIDs = self.index.get(word,1)
-            
-                for wordDocID in wordDocIDs:
+                    if docid in qDocs:
+                        qDocs[docid][word] = self.index[word][docid]
+                    else:
+                        qDocs[docid]= {}
+                        qDocs[docid][word] = self.index[word][docid]
+                        
+                        
+                        
+                        
+        return (sorted(docs), qDocs)
 
-                        qDocs[wordDocID][word] = wordDocIDs[wordDocID]
-                
-         
-        return qDocs 
 ##returns size of Collection    
     def getCollectionSize(self):
         maxID = 0
@@ -195,19 +164,6 @@ class Retrieve:
             
        
         return sortedToArray
-
-
-
-        
-        
-    
-#    def normalizeQuery(self, query, idfWord):
-#        queryN = 0
-#        for word in query:
-#            q = (query[word] * idfWord[word])
-#            queryN += math.pow(q,2)
-#       
-#        return math.sqrt(queryN)
 
 
 
